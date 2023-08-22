@@ -69,6 +69,8 @@ func (fs *FileStorage) SaveURL(longURL *InMemoryStorage) error {
 	}
 
 	obj.ObjectURL = append(obj.ObjectURL, *longURL)
+	InMemoryCollection.ObjectURL = append(InMemoryCollection.ObjectURL, *longURL)
+	
 
 	if jsonData, err = json.Marshal(&obj); err != nil {
 		return err
