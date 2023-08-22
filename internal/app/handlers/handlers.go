@@ -73,7 +73,7 @@ func GetByID(w http.ResponseWriter, r *http.Request, config *config.Config, stor
 	}
 }
 
-func PostApiShorten(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
+func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
 	var requestData struct {
 		URL string `json:"url"`
 	}

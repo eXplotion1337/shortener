@@ -24,7 +24,7 @@ func Run(config *config.Config, storage repository.Storage) error {
 	})
 
 	r.Post("/api/shorten", func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostApiShorten(w, r, config, storage)
+		handlers.PostAPIShorten(w, r, config, storage)
 	})
 
 	log.Printf("Сервер запущен на %s", config.ServerAddr)
