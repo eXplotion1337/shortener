@@ -8,6 +8,7 @@ import (
 
 	"shortener/internal/app/handlers"
 	"shortener/internal/app/handlers/service/repository"
+	"shortener/internal/app/middleware"
 	"shortener/internal/config"
 
 	"github.com/go-chi/chi/v5"
@@ -15,6 +16,7 @@ import (
 
 func Run(config *config.Config, storage repository.Storage) error {
 	r := chi.NewRouter()
+	r.Use(middleware.GZipMiddleware)
 
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostAddURL(w, r, config, storage)
@@ -56,7 +58,7 @@ func InitStorage(conf *config.Config) repository.Storage {
 			fmt.Println("Ошибка создания файла", err)
 		}
 		err = repository.ReadJSONFile()
-		if err != nil{
+		if err != nil {
 			log.Println("Ошибка чтения файла", err)
 		}
 		fmt.Println("file")

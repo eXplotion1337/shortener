@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"shortener/internal"
 	"shortener/internal/app/handlers/service/repository"
+	"shortener/internal/app/middleware"
 	"shortener/internal/config"
 	"strings"
 
@@ -23,9 +24,9 @@ func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, s
 
 	defer r.Body.Close()
 
-	// str, _ := middleware.UngzipData(b)
+	str, _ := middleware.UngzipData(body)
 
-	sit, err := url.ParseRequestURI(string(body))
+	sit, err := url.ParseRequestURI(str)
 	if err != nil {
 		fmt.Println("URL is not valid", err)
 		w.WriteHeader(http.StatusBadRequest)
