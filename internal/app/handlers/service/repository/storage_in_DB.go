@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 )
@@ -25,12 +26,13 @@ func (ds *DatabaseStorage) SaveURL(item *InMemoryStorage) (string, error) {
 		RETURNING short_url
 	`
 	var shortURL string
+
 	err := ds.db.QueryRow(insertQuery, item.ID, item.LongURL, item.ShortURL, item.UserID).Scan(&shortURL)
 	if err != nil {
 
 		return "", err
 	}
-	fmt.Println(shortURL, item.ShortURL)
+
 	if shortURL != item.ShortURL {
 		return shortURL, err
 	}
@@ -39,7 +41,7 @@ func (ds *DatabaseStorage) SaveURL(item *InMemoryStorage) (string, error) {
 }
 
 func (ds *DatabaseStorage) GetLongURL(id string) (string, error) {
-	
+
 	var longURL string
 
 	selectQuery := `
@@ -66,7 +68,6 @@ func tableExists(db *sql.DB, tableName string) (bool, error) {
 	return exists, nil
 }
 
-
 func createURLsTable(db *sql.DB) error {
 	createTableQuery := `
 		CREATE TABLE urls (
@@ -82,17 +83,14 @@ func createURLsTable(db *sql.DB) error {
 }
 
 func CheckBD(databaseDSN string) {
-	// databaseDSN := os.Getenv("DATABASE_DSN")
 	if databaseDSN == "" {
-		// log.Fatal("DATABASE_DSN environment variable is not set")
-		fmt.Println("DATABASE_DSN environment variable is not set")
+		log.Println("DATABASE_DSN environment variable is not set")
 	}
 
 	// Открытие соединения с базой данных
 	db, err := sql.Open("postgres", databaseDSN)
 	if err != nil {
-		// log.Fatal(err)
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer db.Close()
 
@@ -101,20 +99,16 @@ func CheckBD(databaseDSN string) {
 	// Проверка наличия таблицы
 	exists, err := tableExists(db, tableName)
 	if err != nil {
-		// log.Fatal(err)
-		fmt.Println("Нет доступа к БД")
+		log.Println("Нет доступа к БД")
 	}
 
 	if !exists {
 		err := createURLsTable(db)
 		if err != nil {
-			// log.Fatal(err)
-			fmt.Println("Нет доступа к БД")
+			log.Println("Нет доступа к БД")
 		}
-		fmt.Println("Table 'urls' created successfully.")
+		log.Println("Table 'urls' created successfully.")
 	} else {
-		fmt.Println("Table 'urls' already exists.")
+		log.Println("Table 'urls' already exists.")
 	}
 }
-
-

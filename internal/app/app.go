@@ -2,10 +2,8 @@ package app
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"shortener/internal/app/handlers"
 	"shortener/internal/app/handlers/service/repository"
@@ -41,6 +39,10 @@ func Run(config *config.Config, storage repository.Storage) error {
 		handlers.PingDB(w, r, config, storage)
 	})
 
+	r.Post("/api/shorten/batch", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PostBatch(w, r, config, storage)
+	})
+
 	log.Printf("Сервер запущен на %s", config.ServerAddr)
 	log.Printf("Base URL  %s", config.BaseURL)
 	log.Printf("Файл для сохранения данных расположен %s", config.StoragePath)
@@ -60,29 +62,30 @@ func InitStorage(conf *config.Config) repository.Storage {
 	var storage repository.Storage
 	if conf.TypeStorage == "In-memoryStorage" {
 		storage = &repository.JSON{}
-		fmt.Println("in-memory")
+
 	} else if conf.TypeStorage == "FileStorage" {
-		storage = repository.NewFileStorage(os.Getenv("FILE_STORAGE_PATH"))
+		storage = repository.NewFileStorage(conf.StoragePath)
+
 		err := repository.CreateFileIfNotExists(conf.StoragePath)
 		if err != nil {
-			// Обрабатываем ошибку
-			fmt.Println("Ошибка создания файла", err)
+
+			log.Println("Ошибка создания файла", err)
 		}
+
 		err = repository.ReadJSONFile()
 		if err != nil {
 			log.Println("Ошибка чтения файла", err)
 		}
-		fmt.Println("file")
+
 	} else if conf.TypeStorage == "DataBaseStorage" {
 		db, err := sql.Open("postgres", conf.DataBaseDSN)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
-		// defer db.Close()
+
 		storage = repository.NewDatabaseStorage(db)
 		repository.CheckBD(conf.DataBaseDSN)
 
-		fmt.Println("db")
 	} else {
 		log.Fatal("Не удалось инициализировать хранилище")
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"shortener/internal"
@@ -16,6 +17,16 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
+type ShortenRequest struct {
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
+}
+
+type ShortenResponse struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
+}
+
 
 func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
 
@@ -150,11 +161,6 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 		json.NewEncoder(w).Encode(response)
 	}
 
-	// response := map[string]string{"result": respoID}
-	// w.Header().Set("Content-Type", "application/json")
-	// w.WriteHeader(http.StatusCreated)
-	// json.NewEncoder(w).Encode(response)
-
 }
 
 func GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
@@ -205,4 +211,54 @@ func PingDB(w http.ResponseWriter, r *http.Request, config *config.Config, stora
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func PostBatch(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
+	var requests []ShortenRequest
+
+	defer r.Body.Close()
+
+	var userID string
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		fmt.Println("userID not found in context")
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requests); err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	var responses []ShortenResponse
+
+	for _, req := range requests {
+
+		id := internal.GenerateRandomString(10)
+		short := config.BaseURL + "/" + id
+
+		responses = append(responses, ShortenResponse{
+			CorrelationID: req.CorrelationID,
+			ShortURL:      short,
+		})
+
+		newURL := repository.InMemoryStorage{
+			ID:       id,
+			LongURL:  req.OriginalURL,
+			ShortURL: short,
+			UserID:   userID,
+		}
+
+		if _, err := storage.SaveURL(&newURL); err != nil {
+			log.Println("Какие-то ссылки есть в базе")
+			
+		}
+
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(responses); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
