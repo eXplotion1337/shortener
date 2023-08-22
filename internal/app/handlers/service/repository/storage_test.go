@@ -15,7 +15,7 @@ func TestSaveAndGetLongURL(t *testing.T) {
 		UserID:   "1",
 	}
 
-	err := storage.SaveURL(urlData)
+	_, err := storage.SaveURL(urlData)
 	if err != nil {
 		t.Errorf("Ошибка при сохранении URL: %v", err)
 	}

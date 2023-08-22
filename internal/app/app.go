@@ -1,6 +1,7 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"shortener/internal/config"
 
 	"github.com/go-chi/chi/v5"
+	_ "github.com/lib/pq"
 )
 
 func Run(config *config.Config, storage repository.Storage) error {
@@ -71,8 +73,19 @@ func InitStorage(conf *config.Config) repository.Storage {
 			log.Println("Ошибка чтения файла", err)
 		}
 		fmt.Println("file")
-	} else {
+	} else if conf.TypeStorage == "DataBaseStorage" {
+		db, err := sql.Open("postgres", conf.DataBaseDSN)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// defer db.Close()
+		storage = repository.NewDatabaseStorage(db)
+		repository.CheckBD(conf.DataBaseDSN)
+
 		fmt.Println("db")
+	} else {
+		log.Fatal("Не удалось инициализировать хранилище")
 	}
+
 	return storage
 }

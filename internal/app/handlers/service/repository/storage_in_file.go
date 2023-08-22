@@ -36,36 +36,36 @@ func (fs *FileStorage) GetLongURL(id string) (string, error) {
 
 var addData sync.Mutex
 
-func (fs *FileStorage) SaveURL(longURL *InMemoryStorage) error {
+func (fs *FileStorage) SaveURL(longURL *InMemoryStorage) (shortURL string, err error) {
 	addData.Lock()
 	defer addData.Unlock()
 
 	file, err := os.OpenFile(fs.filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer file.Close()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if fileInfo.Size() == 0 {
 		_, err = file.Write([]byte("{}"))
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	jsonData, err := os.ReadFile(fs.filename)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var obj JSON
 	if err = json.Unmarshal(jsonData, &obj); err != nil {
-		return err
+		return "", err
 	}
 
 	obj.ObjectURL = append(obj.ObjectURL, *longURL)
@@ -73,14 +73,13 @@ func (fs *FileStorage) SaveURL(longURL *InMemoryStorage) error {
 	
 
 	if jsonData, err = json.Marshal(&obj); err != nil {
-		return err
+		return "", err
 	}
-
 	if _, err = file.WriteAt(jsonData, 0); err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return "", nil
 }
 
 func ReadJSONFile() error {

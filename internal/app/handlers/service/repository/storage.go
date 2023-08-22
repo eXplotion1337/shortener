@@ -21,15 +21,15 @@ type JSON struct {
 var InMemoryCollection JSON
 
 type Storage interface {
-	SaveURL(longURL *InMemoryStorage) (err error)
+	SaveURL(longURL *InMemoryStorage) (sortURL string, err error)
 	GetLongURL(id string) (longURL string, err error)
 }
 
-func (in *JSON) SaveURL(longURL *InMemoryStorage) (err error) {
+func (in *JSON) SaveURL(longURL *InMemoryStorage) (sortURL string, err error) {
 	in.Lock()
 	defer in.Unlock()
 	InMemoryCollection.ObjectURL = append(InMemoryCollection.ObjectURL, *longURL)
-	return
+	return "", nil
 }
 
 func (in *JSON) GetLongURL(id string) (longURL string, err error) {

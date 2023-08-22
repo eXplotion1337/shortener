@@ -98,7 +98,7 @@ func InitConfig() (*Config, error) {
 			typeStor = "FileStorage"
 		}
 	} else {
-		typeStor = "FileStorage"
+		typeStor = "DataBaseStorage"
 	}
 
 	os.Setenv("SERVER_ADDRESS", serverAddress)

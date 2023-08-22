@@ -62,10 +62,14 @@ func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, s
 		UserID:   userID,
 	}
 
-	storage.SaveURL(&newItem)
-
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(shortURL))
+	short, _ := storage.SaveURL(&newItem)
+	if short != "" {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(short))
+	} else {
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(shortURL))
+	}
 
 }
 
@@ -132,10 +136,24 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 	}
 
 	storage.SaveURL(&newItem)
-	response := map[string]string{"result": respoID}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+
+	short, _ := storage.SaveURL(&newItem)
+	if short != "" {
+		response := map[string]string{"result": respoID}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(response)
+	} else {
+		response := map[string]string{"result": respoID}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(response)
+	}
+
+	// response := map[string]string{"result": respoID}
+	// w.Header().Set("Content-Type", "application/json")
+	// w.WriteHeader(http.StatusCreated)
+	// json.NewEncoder(w).Encode(response)
 
 }
 
