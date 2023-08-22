@@ -19,7 +19,7 @@ func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, s
 
 	var userID string
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		fmt.Println("userID not found in context")
 
@@ -90,7 +90,7 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 
 	var userID string
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		fmt.Println("userID not found in context")
 
@@ -140,7 +140,7 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 func GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 	var userID string
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		fmt.Println("userID not found in context")
 

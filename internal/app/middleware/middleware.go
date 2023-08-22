@@ -90,42 +90,40 @@ func GZipMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+type contextKey string 
+
+const UserIDKey contextKey = "userID"
 
 func SetUserIDCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("Authorization")
-		uid := uuid.New()
 		if err == http.ErrNoCookie || len(cookie.Value) == 0 {
-			// создаем симметрично подписанную куку и устанавливаем ее в браузере пользователя
+			uid := uuid.New()
+
+			// Создаем симметрично подписанную куку и устанавливаем ее в браузере пользователя
 			http.SetCookie(w, &http.Cookie{
 				Name:  "Authorization",
 				Value: uid.String(),
 			})
-			r.AddCookie(&http.Cookie{
-				Name:  "Authorization",
-				Value: uid.String(),
-			})
 
-			// Добавление user_id в контекст запроса
-			ctx := context.WithValue(r.Context(), "userID", uid.String())
+			// Добавляем user_id в контекст запроса
+			ctx := context.WithValue(r.Context(), UserIDKey, uid.String())
 			r = r.WithContext(ctx)
+		} else {
+			userID := cookie.Value
+			_, err := uuid.Parse(userID)
+			if err != nil {
+				http.Error(w, "Некорректный идентификатор пользователя", http.StatusUnauthorized)
+				return
+			}
 
-			next.ServeHTTP(w, r)
-			return
+			// Добавляем user_id в контекст запроса
+			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+			r = r.WithContext(ctx)
 		}
 
-		// проверяем симметрично подписанную куку, если все хорошо - продолжаем обработку запроса
-		userID := cookie.Value
-		_, err = uuid.Parse(userID)
-		if err != nil {
-			http.Error(w, "Некорректный идентификатор пользователя", http.StatusUnauthorized)
-			return
-		}
-
-		// Добавление user_id в контекст запроса
-		ctx := context.WithValue(r.Context(), "userID", userID)
-		r = r.WithContext(ctx)
-
+		// Продолжаем обработку запроса
 		next.ServeHTTP(w, r)
 	})
 }
+
