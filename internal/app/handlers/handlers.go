@@ -150,7 +150,7 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 
 	short, _ := storage.SaveURL(&newItem)
 	if short != "" {
-		response := map[string]string{"result": respoID}
+		response := map[string]string{"result": short}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(response)
