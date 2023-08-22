@@ -43,6 +43,10 @@ func Run(config *config.Config, storage repository.Storage) error {
 		handlers.PostBatch(w, r, config, storage)
 	})
 
+	r.Delete("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
+		handlers.DeleteUserURLsHandler(w, r, config, storage)
+	})
+
 	log.Printf("Сервер запущен на %s", config.ServerAddr)
 	log.Printf("Base URL  %s", config.BaseURL)
 	log.Printf("Файл для сохранения данных расположен %s", config.StoragePath)

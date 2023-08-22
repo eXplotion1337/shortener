@@ -21,17 +21,20 @@ func NewFileStorage(filename string) *FileStorage {
 	}
 }
 
-func (fs *FileStorage) GetLongURL(id string) (string, error) {
+func (fs *FileStorage) GetLongURL(id string) (Longbatch, error) {
 	InMemoryCollection.Mutex.Lock()
 	defer InMemoryCollection.Mutex.Unlock()
+	var batch Longbatch
 
 	for _, v := range InMemoryCollection.ObjectURL {
 		if strings.EqualFold(v.ID, id) {
-			return v.LongURL, nil
+			batch.LongURL = v.LongURL
+			batch.Delete_flag = v.Delete
+			return batch, nil
 		}
 	}
 
-	return "", fmt.Errorf("URL not found")
+	return batch, fmt.Errorf("URL not found")
 }
 
 var addData sync.Mutex
@@ -116,4 +119,19 @@ func CreateFileIfNotExists(path string) error {
 	defer file.Close()
 
 	return nil
+}
+
+func (fs *FileStorage) Delete(ids []string, userID string)  {
+	InMemoryCollection.Mutex.Lock()
+	defer InMemoryCollection.Mutex.Unlock()
+
+	for _, k := range ids{
+		for _, v := range InMemoryCollection.ObjectURL {
+			if k == v.ID {
+				if userID == v.UserID{
+					v.Delete = true
+				}
+			}
+		}
+	}
 }

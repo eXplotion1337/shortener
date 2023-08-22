@@ -27,7 +27,6 @@ type ShortenResponse struct {
 	ShortURL      string `json:"short_url"`
 }
 
-
 func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
 
 	var userID string
@@ -71,6 +70,7 @@ func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, s
 		LongURL:  sitr,
 		ShortURL: shortURL,
 		UserID:   userID,
+		Delete: false,
 	}
 
 	short, _ := storage.SaveURL(&newItem)
@@ -88,13 +88,16 @@ func GetByID(w http.ResponseWriter, r *http.Request, config *config.Config, stor
 	id := chi.URLParam(r, "id")
 
 	long, _ := storage.GetLongURL(id)
-	Location := strings.TrimSpace(long)
-	w.Header().Set("Location", long)
-
-	if Location != "" {
+	Location := strings.TrimSpace(long.LongURL)
+	w.Header().Set("Location", long.LongURL)
+	
+	if Location != "" && !long.Delete_flag{
 		http.Redirect(w, r, Location, http.StatusTemporaryRedirect)
 		return
-	} else {
+	} else if Location != "" && long.Delete_flag {
+		http.Redirect(w, r, Location, http.StatusGone)
+		return
+	}else {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -144,6 +147,7 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 		LongURL:  requestData.URL,
 		ShortURL: respoID,
 		UserID:   userID,
+		Delete: false,
 	}
 
 	storage.SaveURL(&newItem)
@@ -246,6 +250,7 @@ func PostBatch(w http.ResponseWriter, r *http.Request, config *config.Config, st
 			LongURL:  req.OriginalURL,
 			ShortURL: short,
 			UserID:   userID,
+			Delete: false,
 		}
 
 		if _, err := storage.SaveURL(&newURL); err != nil {
@@ -261,4 +266,25 @@ func PostBatch(w http.ResponseWriter, r *http.Request, config *config.Config, st
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func DeleteUserURLsHandler(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
+	// Получаем список идентификаторов сокращенных URL из запроса
+	var ids []string
+	err := json.NewDecoder(r.Body).Decode(&ids)
+	if err != nil {
+		http.Error(w, "Invalid input data", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		fmt.Println("userID not found in context")
+
+	}
+
+	go func() {
+		storage.Delete(ids, userID)
+	}()
+
+	w.WriteHeader(http.StatusAccepted)
 }

@@ -25,8 +25,8 @@ func TestSaveAndGetLongURL(t *testing.T) {
 		t.Errorf("Ошибка при получении длинного URL: %v", err)
 	}
 
-	if retrievedURL != longURL {
-		t.Errorf("Ожидался длинный URL: %s, но получили: %s", longURL, retrievedURL)
+	if retrievedURL.LongURL != longURL {
+		t.Errorf("Ожидался длинный URL: %s, но получили: %s", longURL, retrievedURL.LongURL)
 	}
 }
 
@@ -39,7 +39,7 @@ func TestGetLongURLNotFound(t *testing.T) {
 		t.Errorf("Ошибка при получении длинного URL: %v", err)
 	}
 
-	if retrievedURL != "" {
-		t.Errorf("Ожидалась пустая строка для ненайденного ID, но получили: %s", retrievedURL)
+	if retrievedURL.LongURL != "" {
+		t.Errorf("Ожидалась пустая строка для ненайденного ID, но получили: %s", retrievedURL.LongURL)
 	}
 }
