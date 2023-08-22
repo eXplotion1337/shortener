@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	
-	"shortener/internal/app/handlers/service/repository"
+	"os"
+
 	"shortener/internal/app/handlers"
+	"shortener/internal/app/handlers/service/repository"
 	"shortener/internal/config"
 
 	"github.com/go-chi/chi/v5"
@@ -48,6 +49,11 @@ func InitStorage(conf *config.Config) repository.Storage {
 		storage = &repository.JSON{}
 		fmt.Println("in-memory")
 	} else if conf.TypeStorage == "file" {
+		storage = repository.NewFileStorage(os.Getenv("FILE_STORAGE_PATH"))
+		err := repository.ReadJSONFile()
+		if err != nil{
+			log.Println("Ошибка чтения файла", err)
+		}
 		fmt.Println("file")
 	} else {
 		fmt.Println("db")
