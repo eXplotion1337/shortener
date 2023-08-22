@@ -23,6 +23,10 @@ func Run(config *config.Config, storage repository.Storage) error {
 		handlers.GetByID(w, r, config, storage)
 	})
 
+	r.Post("/api/shorten", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PostApiShorten(w, r, config, storage)
+	})
+
 	log.Printf("Сервер запущен на %s", config.ServerAddr)
 	log.Printf("Base URL  %s", config.BaseURL)
 	log.Printf("Файл для сохранения данных расположен %s", config.StoragePath)

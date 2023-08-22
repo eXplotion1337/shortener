@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -70,4 +71,58 @@ func GetByID(w http.ResponseWriter, r *http.Request, config *config.Config, stor
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+}
+
+func PostApiShorten(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
+	var requestData struct {
+		URL string `json:"url"`
+	}
+
+	// var userID string
+
+	// userID, ok := r.Context().Value("userID").(string)
+	// if !ok {
+	// 	fmt.Println("userID not found in context")
+
+	// }
+
+	// Декодируем тело запроса
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil || requestData.URL == "" {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	sit, err := url.ParseRequestURI(requestData.URL)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	s := sit.String()
+	sitr, err := url.PathUnescape(s)
+	if err != nil {
+		fmt.Println(err, sitr)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Назначаем случайный id
+	id := internal.GenerateRandomString(10)
+	respoID := config.BaseURL + "/" + id
+
+	newItem := repository.InMemoryStorage{
+		ID:       id,
+		LongURL:  requestData.URL,
+		ShortURL: respoID,
+		UserID:   "1",
+	}
+
+	storage.SaveURL(&newItem)
+	response := map[string]string{"result": respoID}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+
 }
