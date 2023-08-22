@@ -56,10 +56,10 @@ func Run(config *config.Config, storage repository.Storage) error {
 
 func InitStorage(conf *config.Config) repository.Storage {
 	var storage repository.Storage
-	if conf.TypeStorage == "in-memory" {
+	if conf.TypeStorage == "In-memoryStorage" {
 		storage = &repository.JSON{}
 		fmt.Println("in-memory")
-	} else if conf.TypeStorage == "file" {
+	} else if conf.TypeStorage == "FileStorage" {
 		storage = repository.NewFileStorage(os.Getenv("FILE_STORAGE_PATH"))
 		err := repository.CreateFileIfNotExists(conf.StoragePath)
 		if err != nil {
