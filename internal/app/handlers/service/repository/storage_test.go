@@ -1,0 +1,45 @@
+package repository
+
+import (
+	"testing"
+)
+
+func TestSaveAndGetLongURL(t *testing.T) {
+	storage := &JSON{}
+	longURL := "https://example.com"
+	id := "testID"
+	urlData := &InMemoryStorage{
+		ID:       id,
+		LongURL:  longURL,
+		ShortURL: "",
+		UserID:   "1",
+	}
+
+	_, err := storage.SaveURL(urlData)
+	if err != nil {
+		t.Errorf("Ошибка при сохранении URL: %v", err)
+	}
+
+	retrievedURL, err := storage.GetLongURL(id)
+	if err != nil {
+		t.Errorf("Ошибка при получении длинного URL: %v", err)
+	}
+
+	if retrievedURL.LongURL != longURL {
+		t.Errorf("Ожидался длинный URL: %s, но получили: %s", longURL, retrievedURL.LongURL)
+	}
+}
+
+func TestGetLongURLNotFound(t *testing.T) {
+	storage := &JSON{}
+	id := "nonExistentID"
+
+	retrievedURL, err := storage.GetLongURL(id)
+	if err != nil {
+		t.Errorf("Ошибка при получении длинного URL: %v", err)
+	}
+
+	if retrievedURL.LongURL != "" {
+		t.Errorf("Ожидалась пустая строка для ненайденного ID, но получили: %s", retrievedURL.LongURL)
+	}
+}
