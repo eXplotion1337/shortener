@@ -16,6 +16,15 @@ import (
 )
 
 func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
+
+	var userID string
+
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		fmt.Println("userID not found in context")
+
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -48,7 +57,7 @@ func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, s
 		ID:       id,
 		LongURL:  sitr,
 		ShortURL: shortURL,
-		UserID:   "1",
+		UserID:   userID,
 	}
 
 	storage.SaveURL(&newItem)
@@ -79,13 +88,13 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 		URL string `json:"url"`
 	}
 
-	// var userID string
+	var userID string
 
-	// userID, ok := r.Context().Value("userID").(string)
-	// if !ok {
-	// 	fmt.Println("userID not found in context")
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		fmt.Println("userID not found in context")
 
-	// }
+	}
 
 	// Декодируем тело запроса
 	err := json.NewDecoder(r.Body).Decode(&requestData)
@@ -117,7 +126,7 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 		ID:       id,
 		LongURL:  requestData.URL,
 		ShortURL: respoID,
-		UserID:   "1",
+		UserID:   userID,
 	}
 
 	storage.SaveURL(&newItem)
@@ -126,4 +135,34 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 
+}
+
+func GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
+	var userID string
+
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		fmt.Println("userID not found in context")
+
+	}
+
+	urls, err := repository.FindURL(userID)
+	if err != nil {
+		http.Error(w, "Не удалось получить список URL пользователя", http.StatusInternalServerError)
+		return
+	}
+
+	if len(urls) == 0 {
+		http.Error(w, "Нет данных", http.StatusNoContent)
+		return
+	}
+
+	jsonResult, err := json.Marshal(urls)
+	if err != nil {
+		http.Error(w, "Ошибка сериализации JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResult)
 }

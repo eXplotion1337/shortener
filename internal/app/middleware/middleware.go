@@ -3,8 +3,11 @@ package middleware
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type gzipResponseWriter struct {
@@ -83,6 +86,45 @@ func GZipMiddleware(next http.Handler) http.Handler {
 		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
 			r.Body, _ = gzip.NewReader(r.Body)
 		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func SetUserIDCookie(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("Authorization")
+		uid := uuid.New()
+		if err == http.ErrNoCookie || len(cookie.Value) == 0 {
+			// создаем симметрично подписанную куку и устанавливаем ее в браузере пользователя
+			http.SetCookie(w, &http.Cookie{
+				Name:  "Authorization",
+				Value: uid.String(),
+			})
+			r.AddCookie(&http.Cookie{
+				Name:  "Authorization",
+				Value: uid.String(),
+			})
+
+			// Добавление user_id в контекст запроса
+			ctx := context.WithValue(r.Context(), "userID", uid.String())
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// проверяем симметрично подписанную куку, если все хорошо - продолжаем обработку запроса
+		userID := cookie.Value
+		_, err = uuid.Parse(userID)
+		if err != nil {
+			http.Error(w, "Некорректный идентификатор пользователя", http.StatusUnauthorized)
+			return
+		}
+
+		// Добавление user_id в контекст запроса
+		ctx := context.WithValue(r.Context(), "userID", userID)
+		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})

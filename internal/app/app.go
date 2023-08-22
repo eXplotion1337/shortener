@@ -17,6 +17,7 @@ import (
 func Run(config *config.Config, storage repository.Storage) error {
 	r := chi.NewRouter()
 	r.Use(middleware.GZipMiddleware)
+	r.Use(middleware.SetUserIDCookie)
 
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostAddURL(w, r, config, storage)
@@ -28,6 +29,10 @@ func Run(config *config.Config, storage repository.Storage) error {
 
 	r.Post("/api/shorten", func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostAPIShorten(w, r, config, storage)
+	})
+
+	r.Get("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetUrlsHandler(w, r)
 	})
 
 	log.Printf("Сервер запущен на %s", config.ServerAddr)
