@@ -93,12 +93,12 @@ func InitConfig() (*Config, error) {
 
 	if dataBaseDsn == "" {
 		if fileStorage == "./"{
-			typeStor = "in-memory"
+			typeStor = "In-memoryStorage"
 		} else {
-			typeStor = "file"
+			typeStor = "FileStorage"
 		}
 	} else {
-		typeStor = "file"
+		typeStor = "DataBaseStorage"
 	}
 
 	os.Setenv("SERVER_ADDRESS", serverAddress)

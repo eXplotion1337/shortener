@@ -35,6 +35,10 @@ func Run(config *config.Config, storage repository.Storage) error {
 		handlers.GetUrlsHandler(w, r)
 	})
 
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PingDB(w, r, config, storage)
+	})
+
 	log.Printf("Сервер запущен на %s", config.ServerAddr)
 	log.Printf("Base URL  %s", config.BaseURL)
 	log.Printf("Файл для сохранения данных расположен %s", config.StoragePath)

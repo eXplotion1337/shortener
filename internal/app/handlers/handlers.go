@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
@@ -165,4 +167,24 @@ func GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResult)
+}
+
+func PingDB(w http.ResponseWriter, r *http.Request, config *config.Config, storage repository.Storage) {
+
+	db, err := sqlx.Open("postgres", config.DataBaseDSN)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
