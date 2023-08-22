@@ -50,7 +50,12 @@ func InitStorage(conf *config.Config) repository.Storage {
 		fmt.Println("in-memory")
 	} else if conf.TypeStorage == "file" {
 		storage = repository.NewFileStorage(os.Getenv("FILE_STORAGE_PATH"))
-		err := repository.ReadJSONFile()
+		err := repository.CreateFileIfNotExists(conf.StoragePath)
+		if err != nil {
+			// Обрабатываем ошибку
+			fmt.Println("Ошибка создания файла", err)
+		}
+		err = repository.ReadJSONFile()
 		if err != nil{
 			log.Println("Ошибка чтения файла", err)
 		}

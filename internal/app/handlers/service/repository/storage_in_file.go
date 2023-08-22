@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -19,7 +20,6 @@ func NewFileStorage(filename string) *FileStorage {
 		filename: os.Getenv("FILE_STORAGE_PATH"),
 	}
 }
-
 
 func (fs *FileStorage) GetLongURL(id string) (string, error) {
 	InMemoryCollection.Mutex.Lock()
@@ -81,7 +81,7 @@ func (fs *FileStorage) SaveURL(longURL *InMemoryStorage) error {
 	return nil
 }
 
-func  ReadJSONFile() error {
+func ReadJSONFile() error {
 
 	jsonFile, err := os.ReadFile(os.Getenv("FILE_STORAGE_PATH"))
 	if err != nil {
@@ -91,6 +91,28 @@ func  ReadJSONFile() error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func CreateFileIfNotExists(path string) error {
+	// path := os.Getenv("FILE_STORAGE_PATH")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// получаем директорию, где должен быть файл
+		dir := filepath.Dir(path)
+
+		// создаем все директории в пути к файлу
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	}
+
+	// создаем сам файл
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
 	return nil
 }
