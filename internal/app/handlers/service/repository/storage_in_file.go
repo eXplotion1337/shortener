@@ -29,7 +29,7 @@ func (fs *FileStorage) GetLongURL(id string) (Longbatch, error) {
 	for _, v := range InMemoryCollection.ObjectURL {
 		if strings.EqualFold(v.ID, id) {
 			batch.LongURL = v.LongURL
-			batch.Delete_flag = v.Delete
+			batch.DeleteFlag = v.Delete
 			return batch, nil
 		}
 	}
@@ -73,7 +73,6 @@ func (fs *FileStorage) SaveURL(longURL *InMemoryStorage) (shortURL string, err e
 
 	obj.ObjectURL = append(obj.ObjectURL, *longURL)
 	InMemoryCollection.ObjectURL = append(InMemoryCollection.ObjectURL, *longURL)
-	
 
 	if jsonData, err = json.Marshal(&obj); err != nil {
 		return "", err
@@ -121,15 +120,16 @@ func CreateFileIfNotExists(path string) error {
 	return nil
 }
 
-func (fs *FileStorage) Delete(ids []string, userID string)  {
+func (fs *FileStorage) Delete(ids []string, userID string) {
 	InMemoryCollection.Mutex.Lock()
 	defer InMemoryCollection.Mutex.Unlock()
 
-	for _, k := range ids{
+	for _, k := range ids {
 		for _, v := range InMemoryCollection.ObjectURL {
 			if k == v.ID {
-				if userID == v.UserID{
+				if userID == v.UserID {
 					v.Delete = true
+					fmt.Println(v.Delete)
 				}
 			}
 		}

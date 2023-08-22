@@ -20,7 +20,7 @@ func NewDatabaseStorage(db *sql.DB) *DatabaseStorage {
 
 func (ds *DatabaseStorage) SaveURL(item *InMemoryStorage) (string, error) {
 	insertQuery := `
-		INSERT INTO urls (id, long_url, short_url, user_id, delete_flag)
+		INSERT INTO urls (id, long_url, short_url, user_id, DeleteFlag)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (long_url) DO UPDATE SET long_url = EXCLUDED.long_url
 		RETURNING short_url
@@ -40,22 +40,21 @@ func (ds *DatabaseStorage) SaveURL(item *InMemoryStorage) (string, error) {
 	return "", nil
 }
 
-
 func (ds *DatabaseStorage) GetLongURL(id string) (Longbatch, error) {
-	var U_data Longbatch
+	var Udata Longbatch
 	selectQuery := `
-		SELECT long_url, delete_flag FROM urls WHERE id = $1
+		SELECT long_url, DeleteFlag FROM urls WHERE id = $1
 	`
 
-	err := ds.db.QueryRow(selectQuery, id).Scan(&U_data.LongURL, &U_data.Delete_flag)
+	err := ds.db.QueryRow(selectQuery, id).Scan(&Udata.LongURL, &Udata.DeleteFlag)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return U_data, fmt.Errorf("URL not found")
+			return Udata, fmt.Errorf("URL not found")
 		}
-		return U_data, err
+		return Udata, err
 	}
 
-	return U_data, nil
+	return Udata, nil
 }
 
 func tableExists(db *sql.DB, tableName string) (bool, error) {
@@ -74,7 +73,7 @@ func createURLsTable(db *sql.DB) error {
 			long_url TEXT UNIQUE NOT NULL,
 			short_url VARCHAR(100) NOT NULL,
 			user_id VARCHAR(36) NOT NULL,
-			delete_flag BOOL NOT NULL
+			DeleteFlag BOOL NOT NULL
 		)
 	`
 
@@ -113,14 +112,13 @@ func CheckBD(databaseDSN string) {
 	}
 }
 
-func (ds *DatabaseStorage) Delete(ids []string, userID string){
-	for _, k := range ids{
-		_, err := ds.db.Exec("UPDATE urls SET delete_flag = true WHERE id = $1 AND user_id = $2", k, userID)
+func (ds *DatabaseStorage) Delete(ids []string, userID string) {
+	for _, k := range ids {
+		_, err := ds.db.Exec("UPDATE urls SET DeleteFlag = true WHERE id = $1 AND user_id = $2", k, userID)
 		if err != nil {
 			log.Println("не удалось заменить флаг")
 		}
 
 	}
-
 
 }

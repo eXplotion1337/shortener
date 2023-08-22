@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 )
@@ -10,7 +11,7 @@ type InMemoryStorage struct {
 	LongURL  string `json:"longURL"`
 	ShortURL string `json:"short_url"`
 	UserID   string `json:"userID"`
-	Delete   bool   `json:"delete_flag"`
+	Delete   bool   `json:"DeleteFlag"`
 }
 
 type JSON struct {
@@ -20,9 +21,9 @@ type JSON struct {
 
 var InMemoryCollection JSON
 
-type Longbatch struct{
-	LongURL string
-	Delete_flag bool
+type Longbatch struct {
+	LongURL    string
+	DeleteFlag bool
 }
 
 type Storage interface {
@@ -38,19 +39,17 @@ func (in *JSON) SaveURL(longURL *InMemoryStorage) (sortURL string, err error) {
 	return "", nil
 }
 
-
-
 func (in *JSON) GetLongURL(id string) (Longbatch, error) {
 	in.Lock()
 	defer in.Unlock()
 
 	var batch Longbatch
-	
+
 	if len(InMemoryCollection.ObjectURL) > 0 {
 		for _, v := range InMemoryCollection.ObjectURL {
 			if strings.EqualFold(v.ID, id) {
 				batch.LongURL = v.LongURL
-				batch.Delete_flag = v.Delete
+				batch.DeleteFlag = v.Delete
 				return batch, nil
 			}
 		}
@@ -69,6 +68,7 @@ func (in *JSON) Delete(ids []string, userID string) {
 				if k == v.ID {
 					if v.UserID == userID {
 						v.Delete = true
+						fmt.Println(v.Delete)
 					}
 				}
 			}

@@ -17,6 +17,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
+
 type ShortenRequest struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
@@ -70,7 +71,7 @@ func PostAddURL(w http.ResponseWriter, r *http.Request, config *config.Config, s
 		LongURL:  sitr,
 		ShortURL: shortURL,
 		UserID:   userID,
-		Delete: false,
+		Delete:   false,
 	}
 
 	short, _ := storage.SaveURL(&newItem)
@@ -90,14 +91,14 @@ func GetByID(w http.ResponseWriter, r *http.Request, config *config.Config, stor
 	long, _ := storage.GetLongURL(id)
 	Location := strings.TrimSpace(long.LongURL)
 	w.Header().Set("Location", long.LongURL)
-	
-	if Location != "" && !long.Delete_flag{
+
+	if Location != "" && !long.DeleteFlag {
 		http.Redirect(w, r, Location, http.StatusTemporaryRedirect)
 		return
-	} else if Location != "" && long.Delete_flag {
+	} else if Location != "" && long.DeleteFlag {
 		http.Redirect(w, r, Location, http.StatusGone)
 		return
-	}else {
+	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -147,7 +148,7 @@ func PostAPIShorten(w http.ResponseWriter, r *http.Request, config *config.Confi
 		LongURL:  requestData.URL,
 		ShortURL: respoID,
 		UserID:   userID,
-		Delete: false,
+		Delete:   false,
 	}
 
 	storage.SaveURL(&newItem)
@@ -250,12 +251,12 @@ func PostBatch(w http.ResponseWriter, r *http.Request, config *config.Config, st
 			LongURL:  req.OriginalURL,
 			ShortURL: short,
 			UserID:   userID,
-			Delete: false,
+			Delete:   false,
 		}
 
 		if _, err := storage.SaveURL(&newURL); err != nil {
 			log.Println("Какие-то ссылки есть в базе")
-			
+
 		}
 
 	}
